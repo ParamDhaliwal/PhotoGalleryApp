@@ -1,7 +1,7 @@
 # PhotoGalleryApp
 Behavior‐Driven‐Development of 1st release of the Photo Gallery app.
-- allow user to take photo,
+- allows user to take photo,
 - automatic tagging of the picture with timestamp,
-- allow user to add caption to the photo,
-- allow user to change the existing caption, and
-- support time as well as caption based search.
+- allows user to add caption to the photo,
+- allows user to change the existing caption, and
+- supports time as well as captions based search.

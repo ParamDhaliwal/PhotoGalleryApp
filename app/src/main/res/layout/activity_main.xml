@@ -50,7 +50,6 @@
         android:id="@+id/btnFilter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="filter"
         android:onClick="showSearchActivity"
         android:layout_alignBaseline="@+id/btnCamera"
         android:layout_alignBottom="@+id/btnCamera"
@@ -77,7 +76,9 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="21dp"
         android:text="Timestamp" />
 
     <EditText

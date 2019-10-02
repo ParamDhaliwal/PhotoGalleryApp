@@ -8,7 +8,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,30 +20,16 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
-    static final int SEARCH_ACTIVITY_REQUEST_CODE = 0;
+    public static final int SEARCH_ACTIVITY_REQUEST_CODE = 0;
     static final int CAMERA_REQUEST_CODE = 1;
-    static final String PHOTO_FILEPROVIDER = "com.example.photogalleryapp.fileprovider";
-
-    private String imageFileName;
     private String currentPhotoPath = null;
-    private File imageFile;
     private int currentPhotoIndex = 0;
     private ArrayList<String> photoGallery;
-
-    private Button btnFilter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnFilter = (Button)findViewById(R.id.btnFilter);
-
-        btnFilter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SearchActivity.class));
-            }
-        });
     }
 
     private ArrayList<String> populateGallery(Date minDate, Date maxDate) {
@@ -60,10 +45,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return photoGallery;
     }
 
-    /**
-     * Displays a image file
-     * @param path
-     */
     private void displayPhoto(String path) {
         ImageView iv = (ImageView) findViewById(R.id.ivMain);
         iv.setImageBitmap(BitmapFactory.decodeFile(path));
@@ -74,10 +55,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
     }
 
-    /**
-     * Changes the currently displayed photo to the next or the previous photo.
-     * @param v
-     */
     public void onClick( View v) {
         switch (v.getId()) {
             case R.id.btnLeft:
@@ -108,18 +85,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /**
-     * Handles a phone Camera app actions
-     * @throws IOException If an input or output exception occurred.
-     */
-    public void takePicture(View v) throws IOException {
+    public void takePicture(View v) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
-            photoFile = createImageFile();
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Log.d("FileCreation", "Failed");
+            }
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
-                        PHOTO_FILEPROVIDER,
+                        "com.example.photogalleryapp.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, CAMERA_REQUEST_CODE);
@@ -127,49 +104,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /**
-     * Creates a new image file.
-     * @throws IOException  If an input or output exception occurred.
-     * @return imageFile
-     */
     private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        this.setImageFileName(new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()));
-        this.setImageFile(File.createTempFile(this.getImageFileName(), ".jpg", dir));
-        this.currentPhotoPath = this.getImageFile().getAbsolutePath();
-        Log.d("createImageFile", currentPhotoPath); // Ignore: Log file update
-        return this.imageFile;
-    }
-
-    /**
-     * Gets the name of the image file
-     * @return imageFileName
-     */
-    private String getImageFileName() {
-        return this.imageFileName;
-    }
-
-    /**
-     * Sets a name for the image file
-     * @param timeStamp
-     */
-    private void setImageFileName(String timeStamp) {
-        this.imageFileName = "JPEG_" + timeStamp + "_";
-    }
-
-    /**
-     * Gets the image file
-     * @return imageFile
-     */
-    private File getImageFile(){
-        return this.imageFile;
-    }
-
-    /**
-     * Sets the image file
-     * @param imageFile
-     */
-    private void setImageFile(File imageFile) {
-        this.imageFile = imageFile;
+        File image = File.createTempFile(imageFileName, ".jpg", dir );
+        currentPhotoPath = image.getAbsolutePath();
+        Log.d("createImageFile", currentPhotoPath);
+        return image;
     }
 }

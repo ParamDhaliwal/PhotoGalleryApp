@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,11 +31,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int currentPhotoIndex = 0;
     private ArrayList<String> photoGallery;
 
+    private Button btnFilter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        btnFilter = (Button)findViewById(R.id.btnFilter);
+
+        btnFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, SearchActivity.class));
+            }
+        });
     }
 
     private ArrayList<String> populateGallery(Date minDate, Date maxDate) {

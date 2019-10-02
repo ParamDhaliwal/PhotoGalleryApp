@@ -1,4 +1,3 @@
 <resources>
     <string name="app_name">PhotoGalleryApp</string>
-    <string name="title_activity_search">SearchActivity</string>
 </resources>

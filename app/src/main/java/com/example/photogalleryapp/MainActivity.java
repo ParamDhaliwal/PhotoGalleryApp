@@ -1,5 +1,6 @@
 package com.example.photogalleryapp;
 
+import android.app.KeyguardManager;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -35,6 +36,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /*
+        try {
+            KeyguardManager mKeyGuardManager = (KeyguardManager) ctx.getSystemService(Context.KEY)
+        }
+        */
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnFilter = (Button)findViewById(R.id.btnFilter);

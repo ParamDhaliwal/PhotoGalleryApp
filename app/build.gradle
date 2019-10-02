@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-com.android.ddmlib.DdmPreferences.setTimeOut(720000)
 
 android {
     compileSdkVersion 29
@@ -11,6 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        com.android.ddmlib.DdmPreferences.setTimeOut(720000)
     }
     buildTypes {
         release {

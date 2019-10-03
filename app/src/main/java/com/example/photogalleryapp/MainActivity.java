@@ -53,6 +53,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    private View.OnClickListener filterListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            Intent i = new Intent(MainActivity.this, SearchActivity.class);
+            startActivityForResult(i, SEARCH_ACTIVITY_REQUEST_CODE);
+        }
+    };
+
     private ArrayList<String> populateGallery(Date minDate, Date maxDate) {
         File file = new File(Environment.getExternalStorageDirectory()
                 .getAbsolutePath(), "/Android/data/com.example.photogalleryapp/files/Pictures"); //should be changed to the package name

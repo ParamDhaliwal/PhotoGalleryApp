@@ -64,7 +64,7 @@ public class MainActivityTest {
     @Test
     public void testSearchActivityLaunch() {
         // click on show search button
-        onView(withId(R.id.btnFilter)).check(matches(withText("filter")));
+        onView(withId(R.id.btnFilter)).perform(click());
         // check searchActivity launch
         intended(hasComponent(SearchActivity.class.getName()));
     }

@@ -69,6 +69,17 @@
         android:text="To:"
         android:textSize="18sp" />
 
+    <GridLayout
+        android:id="@+id/search_result"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/search_fromDateLabel"
+        android:layout_width="match_parent">
+        <TextView
+            android:text="Search Results"/>
+        <ImageView
+            android:id="@+id/search_result_img"/>
+    </GridLayout>
+
     <Button
         android:id="@+id/search_cancel"
         android:layout_width="125dp"

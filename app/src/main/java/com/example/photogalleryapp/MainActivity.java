@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private File createImageFile() throws IOException {
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        this.setImageFileName(new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()));
+        this.setImageFileName(new SimpleDateFormat("yyMMdd").format(new Date()));
         this.setImageFile(File.createTempFile(this.getImageFileName(), ".jpg", dir));
         this.currentPhotoPath = this.getImageFile().getAbsolutePath();
         Log.d("createImageFile", currentPhotoPath); // Ignore: Log file update

@@ -70,16 +70,15 @@
         android:textSize="18sp" />
 
     <GridLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_alignTop="@+id/search_toDateLabel"
+        android:layout_alignBottom="@+id/search_search"
         android:id="@+id/search_result"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@id/search_fromDateLabel"
-        android:layout_width="match_parent">
-        <TextView
-            android:text="Search Results"/>
-        <ImageView
-            android:id="@+id/search_result_img"/>
-    </GridLayout>
-
+        android:layout_width="wrap_content"
+        android:text="Search Results"
+        />
     <Button
         android:id="@+id/search_cancel"
         android:layout_width="143dp"
@@ -113,8 +112,9 @@
         android:layout_marginEnd="116dp"
         android:layout_marginRight="116dp"
         android:layout_marginBottom="85dp"
-        android:onClick="search"
         android:text="Search" />
+
+
 
 </RelativeLayout>
 

@@ -22,8 +22,8 @@ public class SearchActivityTest {
     @Test
     public void testLaunchActivity() {
         onView(withId(R.id.title_search)).check(matches(withText("PhotoGalleryApp")));
-        onView(withId(R.id.search_fromDate)).check(matches(withHint("dd/mm/yyyy")));
-        onView(withId(R.id.search_toDate)).check(matches(withHint("dd/mm/yyyy")));
+        onView(withId(R.id.search_fromDate)).check(matches(withHint("yy/MM/dd")));
+        onView(withId(R.id.search_toDate)).check(matches(withHint("yy/MM/dd")));
         onView(withId(R.id.search_fromDateLabel)).check(matches(withText("From:")));
         onView(withId(R.id.search_toDateLabel)).check(matches(withText("To:")));
         onView(withId(R.id.search_cancel)).check(matches(withText("Cancel")));

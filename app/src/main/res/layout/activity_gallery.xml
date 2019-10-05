@@ -4,23 +4,16 @@
     android:id="@+id/activity_gallery"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/search_search"
-        android:layout_below="@+id/search_main">
+        android:layout_height="match_parent">
+
         <GridLayout
             android:id="@+id/gallery_grid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="5"
-            android:orientation="horizontal">
-            <ImageView
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:background="@color/cardview_dark_background"/>
-        </GridLayout>
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="1mm"/>
     </ScrollView>
 
 </RelativeLayout>

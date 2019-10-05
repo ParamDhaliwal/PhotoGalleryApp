@@ -20,6 +20,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import static com.example.photogalleryapp.MainActivity.decodeFile;
+
 public class SearchActivity extends AppCompatActivity {
 
     private Button btnSearch;
@@ -29,7 +31,7 @@ public class SearchActivity extends AppCompatActivity {
     private Date tDate;
     private LinearLayout searchResultDisplay;
 
-    private ArrayList<File> searchResult;
+    private static ArrayList<File> searchResult = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +98,7 @@ public class SearchActivity extends AppCompatActivity {
             Log.d("displayPhoto====>", result.getName());
             // ImageView for image itself
             iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-            iv.setImageBitmap(BitmapFactory.decodeFile(result.getAbsolutePath()));
+            iv.setImageBitmap(decodeFile(result));
             iv.setLayoutParams(lp);
             // TextView for image name
             tv.setText(result.getName());

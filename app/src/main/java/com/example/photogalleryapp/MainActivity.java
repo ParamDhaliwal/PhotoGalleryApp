@@ -10,7 +10,10 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
@@ -30,9 +33,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String currentPhotoPath = null;
     private File imageFile;
     private int currentPhotoIndex = 0;
-    private ArrayList<String> photoGallery;
+    private ArrayList<PhotoClass> photoGallery;
 
     private Button btnFilter;
+    private Button leftBtn;
+    private Button rightBtn;
+    private EditText caption;
+    private TextView timeStamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,14 +50,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         */
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnFilter = (Button)findViewById(R.id.btnFilter);
 
+        caption = (EditText) findViewById(R.id.captionBox);
+        timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
+
+        photoGallery = populateGallery();    // Load up the gallery on startup
+
+        if (photoGallery.size() > 0) { // in case there were no pictures taken before
+            displayPhoto(photoGallery.get(photoGallery.size() - 1).getPath());    // Display latest gallery picture
+
+            PhotoClass crtPhoto = new PhotoClass(photoGallery.get(photoGallery.size() - 1).getPath());
+        }
+
+        btnFilter = (Button)findViewById(R.id.btnFilter);
         btnFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, SearchActivity.class));
             }
         });
+
     }
 
     private View.OnClickListener filterListener = new View.OnClickListener() {
@@ -60,17 +79,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    private ArrayList<String> populateGallery(Date minDate, Date maxDate) {
+    private ArrayList<PhotoClass> populateGallery() {
         File file = new File(Environment.getExternalStorageDirectory()
                 .getAbsolutePath(), "/Android/data/com.example.photogalleryapp/files/Pictures"); //should be changed to the package name
-        ArrayList photoGallery = new ArrayList<String>();
+        ArrayList tmpGallery = new ArrayList<PhotoClass>();
         File[] fList = file.listFiles();
         if (fList != null) {
             for (File f : file.listFiles()) {
-                photoGallery.add(f.getPath());
+                tmpGallery.add(new PhotoClass(f.getPath()));
             }
         }
-        return photoGallery;
+        return tmpGallery;
     }
 
     /**
@@ -78,8 +97,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param path
      */
     private void displayPhoto(String path) {
+        PhotoClass tmp = new PhotoClass(path);
         ImageView iv = (ImageView) findViewById(R.id.ivMain);
         iv.setImageBitmap(BitmapFactory.decodeFile(path));
+        currentPhotoPath = path;
+        caption.setText(tmp.getCaption());
+        timeStamp.setText(tmp.getTimeStamp());
     }
 
     @Override
@@ -91,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Changes the currently displayed photo to the next or the previous photo.
      * @param v
      */
-    public void onClick( View v) {
+    public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btnLeft:
                 --currentPhotoIndex;
@@ -107,7 +130,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (currentPhotoIndex >= photoGallery.size())
             currentPhotoIndex = photoGallery.size() - 1;
 
-        currentPhotoPath = photoGallery.get(currentPhotoIndex);
+        currentPhotoPath = photoGallery.get(currentPhotoIndex).getPath();
+        Log.d("photoleft, size", Integer.toString(photoGallery.size()));
+        Log.d("photoleft, index", Integer.toString(currentPhotoIndex));
+        displayPhoto(currentPhotoPath);
+    }
+
+    public void scrolling(View v) {
+        switch (v.getId()) {
+            case R.id.btnLeft:
+                --currentPhotoIndex;
+                break;
+            case R.id.btnRight:
+                ++currentPhotoIndex;
+                break;
+            default:
+                break;
+        }
+        if (currentPhotoIndex < 0)
+            currentPhotoIndex = 0;
+        if (currentPhotoIndex >= photoGallery.size())
+            currentPhotoIndex = photoGallery.size() - 1;
+
+        currentPhotoPath = photoGallery.get(currentPhotoIndex).getPath();
         Log.d("photoleft, size", Integer.toString(photoGallery.size()));
         Log.d("photoleft, index", Integer.toString(currentPhotoIndex));
         displayPhoto(currentPhotoPath);
@@ -117,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
+            photoGallery.add(new PhotoClass(currentPhotoPath));
             displayPhoto(currentPhotoPath);
         }
     }
@@ -150,8 +196,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.setImageFileName(new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()));
         this.setImageFile(File.createTempFile(this.getImageFileName(), ".jpg", dir));
         this.currentPhotoPath = this.getImageFile().getAbsolutePath();
+        Toast.makeText(this, dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
         Log.d("createImageFile", currentPhotoPath); // Ignore: Log file update
         return this.imageFile;
+    }
+
+    public void savingCaption(View v) { // Appends caption to file name after a ~
+        PhotoClass tmp = null;
+        for (int i = 0; i < photoGallery.size(); ++i) {
+            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
+                tmp = photoGallery.get(i);
+                break;
+            }
+        }
+
+        File pic = new File(tmp.getPath());
+        File tmpFile = null;
+        String pathWithoutJpg = "";
+
+        if (pic.getPath().indexOf('~') >= 0) {
+            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("~") + 1);
+            tmpFile = new File(pathWithoutJpg + caption.getText().toString() + ".jpg");
+            Toast.makeText(this, tmpFile.getPath(), Toast.LENGTH_LONG).show();
+        } else {
+            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("."));
+            tmpFile = new File(pathWithoutJpg + "~" + caption.getText().toString() + ".jpg");
+        }
+
+        if (!caption.getText().toString().isEmpty()) {
+            pic.renameTo(tmpFile);
+            tmp.setFileName(pic.getName());
+            tmp.setPath(pic.getPath());
+            tmp.setCaption(caption.getText().toString());
+        }
     }
 
     /**

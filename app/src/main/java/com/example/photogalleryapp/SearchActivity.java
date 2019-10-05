@@ -95,6 +95,7 @@ public class SearchActivity extends AppCompatActivity {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(400, 400);
             Log.d("displayPhoto====>", result.getName());
             // ImageView for image itself
+            iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             iv.setImageBitmap(BitmapFactory.decodeFile(result.getAbsolutePath()));
             iv.setLayoutParams(lp);
             // TextView for image name

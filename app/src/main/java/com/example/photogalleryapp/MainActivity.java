@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<String> photoGallery;
 
     private Button btnFilter;
+    private ImageView ivMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +45,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnFilter = (Button)findViewById(R.id.btnFilter);
-
         btnFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, SearchActivity.class));
+            }
+        });
+
+        ivMain = findViewById(R.id.ivMain);
+        ivMain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, GalleryActivity.class));
             }
         });
     }
@@ -80,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void displayPhoto(String path) {
         ImageView iv = (ImageView) findViewById(R.id.ivMain);
         iv.setImageBitmap(BitmapFactory.decodeFile(path));
+        iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
     @Override

@@ -20,25 +20,10 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
-
-    <Button
-        android:id="@+id/btnLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btnCamera"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="44dp"
-        android:layout_marginLeft="44dp"
-        android:layout_marginBottom="100dp"
-        android:text="left" />
-
     <Button
         android:id="@+id/btnCamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/btnLeft"
-        android:layout_alignLeft="@+id/btnLeft"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="0dp"
         android:layout_marginLeft="0dp"
@@ -59,18 +44,6 @@
         android:layout_marginRight="44dp"
         android:layout_marginBottom="0dp"
         android:text="filter" />
-
-    <Button
-        android:id="@+id/btnRight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/btnLeft"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="44dp"
-        android:layout_marginRight="44dp"
-        android:text="right" />
 
     <TextView
         android:id="@+id/textView2"

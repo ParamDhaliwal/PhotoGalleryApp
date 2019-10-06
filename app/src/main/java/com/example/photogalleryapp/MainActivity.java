@@ -1,7 +1,7 @@
 package com.example.photogalleryapp;
 
-import android.app.KeyguardManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,17 +11,21 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity {
     static final int SEARCH_ACTIVITY_REQUEST_CODE = 0;
     static final int CAMERA_REQUEST_CODE = 1;
     static final String PHOTO_FILEPROVIDER = "com.example.photogalleryapp.fileprovider";
@@ -30,20 +34,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String currentPhotoPath = null;
     private File imageFile;
     private int currentPhotoIndex = 0;
-    private ArrayList<String> photoGallery;
+    private File currentPhoto = null;
+    public static ArrayList<File> photoGallery;
 
     private Button btnFilter;
     private ImageView ivMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        /*
-        try {
-            KeyguardManager mKeyGuardManager = (KeyguardManager) ctx.getSystemService(Context.KEY)
-        }
-        */
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        photoGallery = populateGallery();
+
+        ivMain = findViewById(R.id.ivMain);
+        displayPhoto(this.photoGallery.get(this.photoGallery.size()-1));
+
         btnFilter = (Button)findViewById(R.id.btnFilter);
         btnFilter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,42 +57,63 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        ivMain = findViewById(R.id.ivMain);
-        ivMain.setOnClickListener(new View.OnClickListener() {
+        ivMain.setOnTouchListener(new OnSwipeTouchListener(MainActivity.this) {
             @Override
-            public void onClick(View v) {
+            public void onSwipeTop() {
+                Toast.makeText(MainActivity.this, "Gallery Open", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, GalleryActivity.class));
+            }
+            @Override
+            public void onSwipeRight() {
+                //Toast.makeText(MainActivity.this, "SWIPE RIGHT", Toast.LENGTH_SHORT).show();
+                ++currentPhotoIndex;
+                if (currentPhotoIndex < 0)
+                    currentPhotoIndex = 0;
+                if (currentPhotoIndex >= photoGallery.size())
+                    currentPhotoIndex = photoGallery.size() - 1;
+                currentPhoto = photoGallery.get(currentPhotoIndex);
+                displayPhoto(currentPhoto);
+            }
+            @Override
+            public  void onSwipeLeft() {
+                //Toast.makeText(MainActivity.this, "SWIPE LEFT", Toast.LENGTH_SHORT).show();
+                --currentPhotoIndex;
+                if (currentPhotoIndex < 0)
+                    currentPhotoIndex = 0;
+                if (currentPhotoIndex >= photoGallery.size())
+                    currentPhotoIndex = photoGallery.size() - 1;
+                currentPhoto = photoGallery.get(currentPhotoIndex);
+                displayPhoto(currentPhoto);
             }
         });
     }
 
-    private View.OnClickListener filterListener = new View.OnClickListener() {
-        public void onClick(View v) {
-            Intent i = new Intent(MainActivity.this, SearchActivity.class);
-            startActivityForResult(i, SEARCH_ACTIVITY_REQUEST_CODE);
-        }
-    };
 
-    private ArrayList<String> populateGallery(Date minDate, Date maxDate) {
-        File file = new File(Environment.getExternalStorageDirectory()
-                .getAbsolutePath(), "/Android/data/com.example.photogalleryapp/files/Pictures"); //should be changed to the package name
-        ArrayList photoGallery = new ArrayList<String>();
-        File[] fList = file.listFiles();
-        if (fList != null) {
-            for (File f : file.listFiles()) {
-                photoGallery.add(f.getPath());
-            }
+    private ArrayList<File> populateGallery() {
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        ArrayList<File> gallery = new ArrayList<>();
+        File[] allImages = null;
+        if (dir.exists()) {
+            allImages = dir.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return (name.endsWith(".jpg"));
+                }
+            });
         }
-        return photoGallery;
+        assert allImages != null;
+        for(File image: allImages) {
+            gallery.add(image);
+        }
+        return gallery;
     }
 
     /**
      * Displays a image file
-     * @param path
+     * @param image
      */
-    private void displayPhoto(String path) {
-        ImageView iv = (ImageView) findViewById(R.id.ivMain);
-        iv.setImageBitmap(BitmapFactory.decodeFile(path));
+    private void displayPhoto(File image) {
+        ImageView iv = findViewById(R.id.ivMain);
+        iv.setImageBitmap(decodeFile(image));
         iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
@@ -96,37 +122,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
     }
 
-    /**
-     * Changes the currently displayed photo to the next or the previous photo.
-     * @param v
-     */
-    public void onClick( View v) {
-        switch (v.getId()) {
-            case R.id.btnLeft:
-                --currentPhotoIndex;
-                break;
-            case R.id.btnRight:
-                ++currentPhotoIndex;
-                break;
-            default:
-                break;
-        }
-        if (currentPhotoIndex < 0)
-            currentPhotoIndex = 0;
-        if (currentPhotoIndex >= photoGallery.size())
-            currentPhotoIndex = photoGallery.size() - 1;
-
-        currentPhotoPath = photoGallery.get(currentPhotoIndex);
-        Log.d("photoleft, size", Integer.toString(photoGallery.size()));
-        Log.d("photoleft, index", Integer.toString(currentPhotoIndex));
-        displayPhoto(currentPhotoPath);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            displayPhoto(currentPhotoPath);
+            displayPhoto(currentPhoto);
         }
     }
 
@@ -193,5 +193,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void setImageFile(File imageFile) {
         this.imageFile = imageFile;
+    }
+
+    public static Bitmap decodeFile(File f) {
+        try {
+            // Decode image size
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(new FileInputStream(f), null, o);
+
+            // The new size we want to scale to
+            final int REQUIRED_SIZE=70;
+
+            // Find the correct scale value. It should be the power of 2.
+            int scale = 1;
+            while(o.outWidth / scale / 2 >= REQUIRED_SIZE &&
+                    o.outHeight / scale / 2 >= REQUIRED_SIZE) {
+                scale *= 2;
+            }
+
+            // Decode with inSampleSize
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+        } catch (FileNotFoundException e) {}
+        return null;
     }
 }

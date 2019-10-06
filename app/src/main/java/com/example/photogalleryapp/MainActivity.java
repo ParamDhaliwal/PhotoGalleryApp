@@ -44,10 +44,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        photoGallery = populateGallery();
 
+        try {
+            photoGallery = populateGallery();
+
+            if (!photoGallery.isEmpty()) {
+                displayPhoto(this.photoGallery.get(this.photoGallery.size()-1));
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            
+        }
         ivMain = findViewById(R.id.ivMain);
-        displayPhoto(this.photoGallery.get(this.photoGallery.size()-1));
 
         btnFilter = (Button)findViewById(R.id.btnFilter);
         btnFilter.setOnClickListener(new View.OnClickListener() {

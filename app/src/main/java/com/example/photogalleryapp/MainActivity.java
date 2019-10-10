@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -183,36 +184,36 @@ public class MainActivity extends AppCompatActivity {
         return this.imageFile;
     }
 
-    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
-    public void savingCaption(View v) { // Appends caption to file name after a ~
-        PhotoClass tmp = null;
-        for (int i = 0; i < photoGallery.size(); ++i) {
-            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
-                tmp = photoGallery.get(i);
-                break;
-            }
-        }
+//    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
+//    public void savingCaption(View v) { // Appends caption to file name after a ~
+//        PhotoClass tmp = null;
+//        for (int i = 0; i < photoGallery.size(); ++i) {
+//            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
+//                tmp = photoGallery.get(i);
+//                break;
+//            }
+//        }
 
-        File pic = new File(tmp.getPath());
-        File tmpFile = null;
-        String pathWithoutJpg = "";
-
-        if (pic.getPath().indexOf('~') >= 0) {
-            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("~") + 1);
-            tmpFile = new File(pathWithoutJpg + caption.getText().toString() + ".jpg");
-            Toast.makeText(this, tmpFile.getPath(), Toast.LENGTH_LONG).show();
-        } else {
-            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("."));
-            tmpFile = new File(pathWithoutJpg + "~" + caption.getText().toString() + ".jpg");
-        }
-
-        if (!caption.getText().toString().isEmpty()) {
-            pic.renameTo(tmpFile);
-            tmp.setFileName(pic.getName());
-            tmp.setPath(pic.getPath());
-            tmp.setCaption(caption.getText().toString());
-        }
-    }
+//        File pic = new File(tmp.getPath());
+//        File tmpFile = null;
+//        String pathWithoutJpg = "";
+//
+//        if (pic.getPath().indexOf('~') >= 0) {
+//            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("~") + 1);
+//            tmpFile = new File(pathWithoutJpg + caption.getText().toString() + ".jpg");
+//            Toast.makeText(this, tmpFile.getPath(), Toast.LENGTH_LONG).show();
+//        } else {
+//            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("."));
+//            tmpFile = new File(pathWithoutJpg + "~" + caption.getText().toString() + ".jpg");
+//        }
+//
+//        if (!caption.getText().toString().isEmpty()) {
+//            pic.renameTo(tmpFile);
+//            tmp.setFileName(pic.getName());
+//            tmp.setPath(pic.getPath());
+//            tmp.setCaption(caption.getText().toString());
+//        }
+//    }
 
     /**
      * Gets the name of the image file

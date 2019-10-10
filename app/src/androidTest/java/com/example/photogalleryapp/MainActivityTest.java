@@ -30,8 +30,6 @@ public class MainActivityTest {
 
     @Test
     public void testLaunchActivity() {
-        onView(withId(R.id.btnLeft)).check(matches(withText("left")));
-        onView(withId(R.id.btnRight)).check(matches(withText("right")));
         onView(withId(R.id.btnFilter)).check(matches(withText("filter")));
         onView(withId(R.id.btnCamera)).check(matches(withText("snap")));
     }

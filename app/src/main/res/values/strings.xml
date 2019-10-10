@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">PhotoGalleryApp</string>
     <string name="title_activity_search">SearchActivity</string>
+    <string name="enterCaption">Enter a caption...</string>
+    <string name="swipe_right">&gt;&gt;</string>
+    <string name="swipe_left">&lt;&lt;</string>
+    <string name="snap_btn">Snap</string>
+    <string name="filter_btn">Filter</string>
+    <string name="save_caption">Save</string>
 </resources>

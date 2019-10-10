@@ -10,7 +10,9 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnFilter;
     private ImageView ivMain;
+    private EditText caption;
+    private TextView timeStamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +58,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (ArrayIndexOutOfBoundsException ex) {
             
         }
+        
         ivMain = findViewById(R.id.ivMain);
+        caption = (EditText) findViewById(R.id.captionBox);
+        timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
 
         btnFilter = (Button)findViewById(R.id.btnFilter);
         btnFilter.setOnClickListener(new View.OnClickListener() {
@@ -107,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
         assert allImages != null;
         for(File image: allImages) {
             gallery.add(image);
@@ -122,6 +130,9 @@ public class MainActivity extends AppCompatActivity {
         ImageView iv = findViewById(R.id.ivMain);
         iv.setImageBitmap(decodeFile(image));
         iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        currentPhotoPath = image.getPath();
+        //caption.setText(tmp.getCaption()); fix to not rely on PhotoClass
+        //timeStamp.setText(tmp.getTimeStamp());
     }
 
     @Override
@@ -133,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
+            photoGallery.add(currentPhoto);
             displayPhoto(currentPhoto);
         }
     }
@@ -166,8 +178,40 @@ public class MainActivity extends AppCompatActivity {
         this.setImageFileName(new SimpleDateFormat("yyMMdd").format(new Date()));
         this.setImageFile(File.createTempFile(this.getImageFileName(), ".jpg", dir));
         this.currentPhotoPath = this.getImageFile().getAbsolutePath();
+        Toast.makeText(this, dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
         Log.d("createImageFile", currentPhotoPath); // Ignore: Log file update
         return this.imageFile;
+    }
+
+    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
+    public void savingCaption(View v) { // Appends caption to file name after a ~
+        PhotoClass tmp = null;
+        for (int i = 0; i < photoGallery.size(); ++i) {
+            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
+                tmp = photoGallery.get(i);
+                break;
+            }
+        }
+
+        File pic = new File(tmp.getPath());
+        File tmpFile = null;
+        String pathWithoutJpg = "";
+
+        if (pic.getPath().indexOf('~') >= 0) {
+            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("~") + 1);
+            tmpFile = new File(pathWithoutJpg + caption.getText().toString() + ".jpg");
+            Toast.makeText(this, tmpFile.getPath(), Toast.LENGTH_LONG).show();
+        } else {
+            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("."));
+            tmpFile = new File(pathWithoutJpg + "~" + caption.getText().toString() + ".jpg");
+        }
+
+        if (!caption.getText().toString().isEmpty()) {
+            pic.renameTo(tmpFile);
+            tmp.setFileName(pic.getName());
+            tmp.setPath(pic.getPath());
+            tmp.setCaption(caption.getText().toString());
+        }
     }
 
     /**

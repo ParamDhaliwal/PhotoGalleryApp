@@ -183,8 +183,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("createImageFile", currentPhotoPath); // Ignore: Log file update
         return this.imageFile;
     }
-
-//    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
+  
 //    public void savingCaption(View v) { // Appends caption to file name after a ~
 //        PhotoClass tmp = null;
 //        for (int i = 0; i < photoGallery.size(); ++i) {
@@ -193,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
 //                break;
 //            }
 //        }
-
 //        File pic = new File(tmp.getPath());
 //        File tmpFile = null;
 //        String pathWithoutJpg = "";

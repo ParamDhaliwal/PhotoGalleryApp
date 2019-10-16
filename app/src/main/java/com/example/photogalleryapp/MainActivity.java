@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -135,15 +136,29 @@ public class MainActivity extends AppCompatActivity {
         currentPhoto = image;
 
         String theCaption = "";
+        String theTimeStamp = "";
+        int tmp = image.getName().indexOf('_', 0);
+
+        SimpleDateFormat inf = new SimpleDateFormat("yyMMdd");
+        SimpleDateFormat outf = new SimpleDateFormat("MMM dd, yyyy");
+        Date date = null;
+
+        theTimeStamp = image.getName().substring(tmp + 1, tmp + 7);
+
+        try {
+            date = inf.parse(theTimeStamp);
+            theTimeStamp = outf.format(date);
+        } catch (ParseException e) {}
+
         int usFirst = image.getName().indexOf('_', 5);
         int usLast = image.getName().indexOf('_', usFirst + 1);
 
-        if (image.getName().indexOf('~') < 0) { // Already has a caption saved
+        if (image.getName().indexOf('~') < 0) {
             theCaption = image.getName().substring(usFirst + 1, usLast);
         }
 
         caption.setText(theCaption);
-        //timeStamp.setText(tmp.getTimeStamp());
+        timeStamp.setText(theTimeStamp);
     }
 
     @Override
@@ -199,8 +214,7 @@ public class MainActivity extends AppCompatActivity {
         return this.imageFile;
     }
 
-    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
-    public void savingCaption(View v) { // Appends caption to file name after a ~
+    public void savingCaption(View v) {
         File pic = null;
         int idx = 0;
         for (int i = 0; i < photoGallery.size(); ++i) {

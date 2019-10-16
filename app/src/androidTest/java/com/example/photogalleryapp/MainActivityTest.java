@@ -30,8 +30,8 @@ public class MainActivityTest {
 
     @Test
     public void testLaunchActivity() {
-        onView(withId(R.id.btnFilter)).check(matches(withText("filter")));
-        onView(withId(R.id.btnCamera)).check(matches(withText("snap")));
+        onView(withId(R.id.btnFilter)).check(matches(withText("Filter")));
+        onView(withId(R.id.btnCamera)).check(matches(withText("Snap")));
     }
 
     @Test

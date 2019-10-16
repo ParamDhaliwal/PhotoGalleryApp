@@ -199,8 +199,7 @@ public class MainActivity extends AppCompatActivity {
         return this.imageFile;
     }
 
-    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
-    public void savingCaption(View v) { // Appends caption to file name after a ~
+    public void savingCaption(View v) {
         File pic = null;
         int idx = 0;
         for (int i = 0; i < photoGallery.size(); ++i) {

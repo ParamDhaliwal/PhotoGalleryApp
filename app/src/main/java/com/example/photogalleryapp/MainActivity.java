@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,11 +44,16 @@ public class MainActivity extends AppCompatActivity {
     private ImageView ivMain;
     private EditText caption;
     private TextView timeStamp;
+    private File tmpNewFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ivMain = findViewById(R.id.ivMain);
+        caption = (EditText) findViewById(R.id.captionBox);
+        timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
 
         try {
             photoGallery = populateGallery();
@@ -58,10 +64,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (ArrayIndexOutOfBoundsException ex) {
             
         }
-        
-        ivMain = findViewById(R.id.ivMain);
-        caption = (EditText) findViewById(R.id.captionBox);
-        timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
 
         btnFilter = (Button)findViewById(R.id.btnFilter);
         btnFilter.setOnClickListener(new View.OnClickListener() {
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSwipeTop() {
                 Toast.makeText(MainActivity.this, "Gallery Open", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, GalleryActivity.class));
+               // startActivityForResult(new Intent(MainActivity.this, GalleryActivity.class), 1);
             }
             @Override
             public void onSwipeRight() {
@@ -131,8 +134,32 @@ public class MainActivity extends AppCompatActivity {
         iv.setImageBitmap(decodeFile(image));
         iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         currentPhotoPath = image.getPath();
-        //caption.setText(tmp.getCaption()); fix to not rely on PhotoClass
-        //timeStamp.setText(tmp.getTimeStamp());
+        currentPhoto = image;
+
+        String theCaption = "";
+        String theTimeStamp = "";
+        int tmp = image.getName().indexOf('_', 0);
+
+        SimpleDateFormat inf = new SimpleDateFormat("yyMMdd");
+        SimpleDateFormat outf = new SimpleDateFormat("MMM dd, yyyy");
+        Date date = null;
+
+        theTimeStamp = image.getName().substring(tmp + 1, tmp + 7);
+
+        try {
+            date = inf.parse(theTimeStamp);
+            theTimeStamp = outf.format(date);
+        } catch (ParseException e) {}
+
+        int usFirst = image.getName().indexOf('_', 5);
+        int usLast = image.getName().indexOf('_', usFirst + 1);
+
+        if (image.getName().indexOf('~') < 0) {
+            theCaption = image.getName().substring(usFirst + 1, usLast);
+        }
+
+        caption.setText(theCaption);
+        timeStamp.setText(theTimeStamp);
     }
 
     @Override
@@ -143,7 +170,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
+        if (tmpNewFile.length() == 0) {
+            tmpNewFile.delete();
+            tmpNewFile = null;
+        }
+
+        if (resultCode == RESULT_OK && tmpNewFile != null && tmpNewFile.length() != 0) {
+            currentPhoto = tmpNewFile;
+            currentPhotoPath = currentPhoto.getPath();
             photoGallery.add(currentPhoto);
             displayPhoto(currentPhoto);
         }
@@ -156,12 +190,11 @@ public class MainActivity extends AppCompatActivity {
     public void takePicture(View v) throws IOException {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            File photoFile = null;
-            photoFile = createImageFile();
-            if (photoFile != null) {
+            tmpNewFile = createImageFile();
+            if (tmpNewFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
                         PHOTO_FILEPROVIDER,
-                        photoFile);
+                        tmpNewFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, CAMERA_REQUEST_CODE);
             }
@@ -178,41 +211,42 @@ public class MainActivity extends AppCompatActivity {
         this.setImageFileName(new SimpleDateFormat("yyMMdd").format(new Date()));
         this.setImageFile(File.createTempFile(this.getImageFileName(), ".jpg", dir));
         this.currentPhotoPath = this.getImageFile().getAbsolutePath();
-        Toast.makeText(this, dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
         Log.d("createImageFile", currentPhotoPath); // Ignore: Log file update
         return this.imageFile;
     }
 
-    // ADJUST TO NOT ACCOUNT FOR PHOTOCLASS
-//    public void savingCaption(View v) { // Appends caption to file name after a ~
-//        PhotoClass tmp = null;
-//        for (int i = 0; i < photoGallery.size(); ++i) {
-//            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
-//                tmp = photoGallery.get(i);
-//                break;
-//            }
-//        }
-//
-//        File pic = new File(tmp.getPath());
-//        File tmpFile = null;
-//        String pathWithoutJpg = "";
-//
-//        if (pic.getPath().indexOf('~') >= 0) {
-//            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("~") + 1);
-//            tmpFile = new File(pathWithoutJpg + caption.getText().toString() + ".jpg");
-//            Toast.makeText(this, tmpFile.getPath(), Toast.LENGTH_LONG).show();
-//        } else {
-//            pathWithoutJpg = tmp.getPath().substring(0, tmp.getPath().lastIndexOf("."));
-//            tmpFile = new File(pathWithoutJpg + "~" + caption.getText().toString() + ".jpg");
-//        }
-//
-//        if (!caption.getText().toString().isEmpty()) {
-//            pic.renameTo(tmpFile);
-//            tmp.setFileName(pic.getName());
-//            tmp.setPath(pic.getPath());
-//            tmp.setCaption(caption.getText().toString());
-//        }
-//    }
+    public void savingCaption(View v) {
+        File pic = null;
+
+        for (int i = 0; i < photoGallery.size(); ++i) {
+            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
+                pic = photoGallery.get(i);
+                break;
+            }
+        }
+
+        File tmpFile = null;
+        String newName = "";
+        String lastHalf = "";
+
+        int usFirst = pic.getName().indexOf('_', 5);
+        int usLast = pic.getName().indexOf('_', usFirst + 1);
+
+        newName = pic.getName().substring(0, pic.getName().indexOf('_', 1))
+                + pic.getName().substring(pic.getName().indexOf('_',
+                1), pic.getName().indexOf('_', 5) + 1);
+        lastHalf = pic.getName().substring(pic.getName().lastIndexOf('_'));
+
+        if (!caption.getText().toString().isEmpty()) {
+            newName = newName + caption.getText().toString() + lastHalf;
+        } else if (caption.getText().toString().isEmpty()){
+            newName = newName + "~" + lastHalf;
+        }
+
+        String zePath = pic.getPath().substring(0, pic.getPath().lastIndexOf('/') + 1);
+        tmpFile = new File(zePath + newName);
+        pic.renameTo(tmpFile);
+    }
 
     /**
      * Gets the name of the image file
@@ -227,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
      * @param timeStamp
      */
     private void setImageFileName(String timeStamp) {
-        this.imageFileName = "JPEG_" + timeStamp + "_";
+        this.imageFileName = "JPEG_" + timeStamp + "_~_";
     }
 
     /**

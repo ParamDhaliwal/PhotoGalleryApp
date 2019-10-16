@@ -76,6 +76,7 @@ public class SearchActivity extends AppCompatActivity {
             try {
                 String[] parts = image.getName().split("_");
                 String imageFileName = parts[1];
+                String caption = parts[2];
                 imageDate = new SimpleDateFormat("yyMMdd").parse(imageFileName);
                 Log.d("imageDate = ", imageDate.toString());
                 if (imageDate.compareTo(fDate) > 0 && imageDate.compareTo(tDate) < 0) {

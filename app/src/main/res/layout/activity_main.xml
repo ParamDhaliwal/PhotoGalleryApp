@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/pg_bg">
 
     <ImageView
         android:id="@+id/ivMain"
@@ -25,7 +26,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/btnLeft"
         android:layout_marginBottom="210dp"
         android:layout_marginLeft="2dp"
         android:layout_marginStart="2dp"
@@ -43,7 +43,6 @@
         android:layout_marginBottom="77dp"
         android:layout_marginEnd="42dp"
         android:layout_marginRight="42dp"
-        android:onClick="showSearchActivity"
         android:text="@string/filter_btn" />
 
     <TextView

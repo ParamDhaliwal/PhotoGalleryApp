@@ -68,15 +68,7 @@
                 android:inputType="date"
                 android:textSize="16sp" />
         </LinearLayout>
-    </LinearLayout><![CDATA[
-
-    >
-
-
-
-
-
-    ]]>
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"

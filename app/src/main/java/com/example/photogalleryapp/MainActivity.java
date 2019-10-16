@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSwipeTop() {
                 Toast.makeText(MainActivity.this, "Gallery Open", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, GalleryActivity.class));
+               // startActivityForResult(new Intent(MainActivity.this, GalleryActivity.class), 1);
             }
             @Override
             public void onSwipeRight() {
@@ -216,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void savingCaption(View v) {
         File pic = null;
-        int idx = 0;
+
         for (int i = 0; i < photoGallery.size(); ++i) {
             if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
                 pic = photoGallery.get(i);

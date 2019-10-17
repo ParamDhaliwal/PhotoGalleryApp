@@ -1,8 +1,15 @@
 package com.example.photogalleryapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -17,6 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
@@ -46,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView caption;
     private TextView timeStamp;
     private File tmpNewFile;
+    private ExifInterface exifInterface;
+    private Location location;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -270,10 +281,47 @@ public class MainActivity extends AppCompatActivity {
     public void savingCaption(View v) {
         File pic = null;
 
-        for (int i = 0; i < photoGallery.size(); ++i) {
-            if (photoGallery.get(i).getPath().equals(currentPhotoPath)) {
-                pic = photoGallery.get(i);
-                break;
+        pic = photoGallery.get(currentPhotoIndex);
+        try {
+            exifInterface = new ExifInterface(pic.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new MyLocationListener();
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                    101);
+            Toast.makeText(MainActivity.this, "Permissions main", Toast.LENGTH_SHORT).show();
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+        String provider = locationManager.getBestProvider(new Criteria(), true);
+
+
+        this.location = locationManager.getLastKnownLocation(provider);
+
+        if (this.location != null) {
+            Toast.makeText(MainActivity.this, "My Location " + this.location, Toast.LENGTH_SHORT).show();
+
+            if (this.location.getLatitude() > 0)
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
+            else
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
+            if (this.location.getLongitude() > 0)
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
+            else
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
+
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(this.location.getLongitude()));
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(this.location.getLatitude()));
+            try {
+                exifInterface.saveAttributes();
+            } catch ( IOException e) {
+                e.printStackTrace();
             }
         }
 
@@ -298,6 +346,16 @@ public class MainActivity extends AppCompatActivity {
         String zePath = pic.getPath().substring(0, pic.getPath().lastIndexOf('/') + 1);
         tmpFile = new File(zePath + newName);
         pic.renameTo(tmpFile);
+    }
+
+    private String dec2DMS(double coord) {
+        coord = coord > 0 ? coord : -coord;  // -105.9876543 -> 105.9876543
+        String sOut = Integer.toString((int)coord) + "/1,";   // 105/1,
+        coord = (coord % 1) * 60;         // .987654321 * 60 = 59.259258
+        sOut = sOut + Integer.toString((int)coord) + "/1,";   // 105/1,59/1,
+        coord = (coord % 1) * 60000;             // .259258 * 60000 = 15555
+        sOut = sOut + Integer.toString((int)coord) + "/1000";   // 105/1,59/1,15555/1000
+        return sOut;
     }
 
     /**
@@ -355,5 +413,32 @@ public class MainActivity extends AppCompatActivity {
             return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
         } catch (FileNotFoundException e) {}
         return null;
+    }
+
+    private class MyLocationListener implements LocationListener {
+        private double longitude;
+        private double latitude;
+        @Override
+        public void onLocationChanged(Location location) {
+            this.longitude = location.getLongitude();
+            this.latitude = location.getLatitude();
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {}
+
+        @Override
+        public void onProviderEnabled(String provider) {}
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        public double getLongitude() {
+            return this.longitude;
+        }
+
+        public double getLatitude() {
+            return this.latitude;
+        }
     }
 }

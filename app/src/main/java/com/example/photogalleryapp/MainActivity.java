@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            pic = photoGallery.get(currentPhotoIndex);
+            pic = currentPhoto;
             ExifInterface exifInterface = new ExifInterface(pic.getAbsolutePath());
 
             if (this.wayLongitude != 0.0 && this.wayLongitude != 0.0) {

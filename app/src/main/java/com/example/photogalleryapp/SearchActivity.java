@@ -130,8 +130,26 @@ public class SearchActivity extends AppCompatActivity {
         for(File image: images) {
             try {
                 exif = new ExifInterface(image.getAbsolutePath());
-                image_lat = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE);
-                image_lng = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE);
+                if (exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE) == null) {
+                    break;
+                }
+
+                image_lat = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE).split("/")[0];
+                image_lng = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE).split("/")[0];
+
+
+                if(exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE_REF).equals("S"))
+                {
+                    image_lat = "-" + image_lat;
+                }
+
+                if(exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF).equals("W"))
+                {
+                    image_lng = "-" + image_lng;
+                }
+
+                Log.d("Current latitude: ", "Lat: "  + image_lat + " | Long: " + image_lng);
+
                 if (latitude.equals(image_lat) && longitude.equals(image_lng)) {
                     searchResult.add(image);
                 }

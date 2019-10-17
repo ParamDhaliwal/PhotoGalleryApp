@@ -3,11 +3,13 @@ package com.example.photogalleryapp;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -20,11 +22,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-<<<<<<< HEAD
 import androidx.core.app.ActivityCompat;
-=======
->>>>>>> 2e50344d33fd74b2e033db32973d3946d26154b4
 import androidx.core.content.FileProvider;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView captionDisplay;
     private TextView timeStamp;
     private File tmpNewFile;
-    private ExifInterface exifInterface;
 
     private double wayLatitude = 0.0, wayLongitude = 0.0;
 
@@ -85,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(20 * 1000);
 
+        Log.d("mFusedLastLocation() ", mFusedLocationClient.getLastLocation().toString());
+        Log.d("locationRequest ", locationRequest.toString());
+
         new GpsUtils(this).turnGPSOn(new GpsUtils.onGpsListener() {
             @Override
             public void gpsStatus(boolean isGPSEnable) {
@@ -101,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
+                    Log.d("locationOnCreate", location.toString());
                     if (location != null) {
                         wayLatitude = location.getLatitude();
                         wayLongitude = location.getLongitude();
@@ -127,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 displayPhoto(this.photoGallery.get(this.photoGallery.size()-1));
             }
         } catch (ArrayIndexOutOfBoundsException ex) {
-            
+            ex.printStackTrace();
         }
 
         btnFilter = (Button)findViewById(R.id.btnFilter);
@@ -288,6 +291,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && tmpNewFile != null && tmpNewFile.length() != 0) {
+            if (requestCode == GPS_REQUEST) {
+                isGPS = true; // flag maintain before get location
+            }
             getLocation();
             if (tmpNewFile.length() == 0) {
                 tmpNewFile.delete();
@@ -297,9 +303,7 @@ public class MainActivity extends AppCompatActivity {
             currentPhotoPath = currentPhoto.getPath();
             photoGallery.add(currentPhoto);
             displayPhoto(currentPhoto);
-            if (requestCode == GPS_REQUEST) {
-                isGPS = true; // flag maintain before get location
-            }
+
         }
     }
 
@@ -338,54 +342,44 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void savingCaption(View v) {
         File pic = null;
-        ExifInterface exif;
-
-        while (!isGPS) {
+        getLocation();
+        Log.d("GPS status ", "" + isGPS);
+        if (!isGPS) {
             Toast.makeText(this, "Please turn on GPS", Toast.LENGTH_SHORT).show();
+            getLocation();
         }
 
-        pic = photoGallery.get(currentPhotoIndex);
         try {
-            exifInterface = new ExifInterface(pic.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            pic = photoGallery.get(currentPhotoIndex);
+            ExifInterface exifInterface = new ExifInterface(pic.getAbsolutePath());
 
-        Toast.makeText(MainActivity.this, "My Location=> Lat: " + this.wayLatitude + " | Long: " + this.wayLongitude, Toast.LENGTH_SHORT).show();
+            if (this.wayLongitude != 0.0 && this.wayLongitude != 0.0) {
+                Log.d("Current location: ", "Lat: "  + this.wayLatitude + " | Long: " + this.wayLongitude);
+            }
+            Toast.makeText(this, "Lat " + this.wayLatitude + " | Long " + this.wayLongitude, Toast.LENGTH_SHORT).show();
+            if (this.wayLatitude > 0)
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
+            else
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
+            if (this.wayLongitude > 0)
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
+            else
+                exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
 
-        if (this.wayLatitude > 0)
-            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
-        else
-            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
-        if (this.wayLongitude > 0)
-            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
-        else
-            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(this.wayLongitude));
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(this.wayLatitude));
 
-        exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(this.wayLongitude));
-        exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(this.wayLatitude));
-        try {
-            exifInterface.saveAttributes();
-        } catch ( IOException e) {
-            e.printStackTrace();
-        }
-
-
-        File tmpFile = null;
-        String newName = "";
-        String lastHalf = "";
-
+            assert pic != null;
             if(!caption.getText().toString().matches(""))
             {
-                exif.setAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION, caption.getText().toString());
-                exif.saveAttributes();
-                String theCaption = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
+                exifInterface.setAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION, caption.getText().toString());
+                exifInterface.saveAttributes();
+                String theCaption = exifInterface.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
 
                 if (theCaption != null && !theCaption.isEmpty()) {
                     captionDisplay.setText(theCaption);
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -470,6 +464,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(Location location) {
                     if (location != null) {
+                        Log.d("Location onSuccess=>", location.toString());
                         wayLatitude = location.getLatitude();
                         wayLongitude = location.getLongitude();
                     } else {

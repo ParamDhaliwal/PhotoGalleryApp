@@ -11,6 +11,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -23,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -52,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnFilter;
     private ImageView ivMain;
-    private TextView caption;
+    private EditText caption;
+    private TextView captionDisplay;
     private TextView timeStamp;
     private File tmpNewFile;
     private ExifInterface exifInterface;
@@ -64,8 +67,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ivMain = findViewById(R.id.ivMain);
-        caption = (TextView) findViewById(R.id.captionDisplay);
+        caption = (EditText) findViewById(R.id.captionBox);
         timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
+        captionDisplay = (TextView) findViewById(R.id.captionDisplay);
 
 
         try {
@@ -157,8 +161,19 @@ public class MainActivity extends AppCompatActivity {
         iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         currentPhotoPath = image.getPath();
         currentPhoto = image;
+        try {
+            ExifInterface exif = new ExifInterface(image.getAbsolutePath());
+            String theCaption = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
+            if (theCaption != null && !theCaption.isEmpty()) {
+                captionDisplay.setText(theCaption);
+            }
+            else {
+                captionDisplay.setText("");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        String theCaption = "";
         String theTimeStamp = "";
         int tmp = image.getName().indexOf('_', 0);
 
@@ -173,15 +188,8 @@ public class MainActivity extends AppCompatActivity {
             theTimeStamp = outf.format(date);
         } catch (ParseException e) {}
 
-        int usFirst = image.getName().indexOf('_', 5);
-        int usLast = image.getName().indexOf('_', usFirst + 1);
-        try {
-            if (image.getName().indexOf('~') < 0) {
-                theCaption = image.getName().substring(usFirst + 1, usLast);
-            }
-        } catch (StringIndexOutOfBoundsException e) {}
 
-        caption.setText(theCaption);
+
         timeStamp.setText(theTimeStamp);
     }
 
@@ -278,8 +286,10 @@ public class MainActivity extends AppCompatActivity {
         return this.imageFile;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void savingCaption(View v) {
         File pic = null;
+        ExifInterface exif;
 
         pic = photoGallery.get(currentPhotoIndex);
         try {
@@ -325,27 +335,25 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        File tmpFile = null;
-        String newName = "";
-        String lastHalf = "";
+        try {
+            assert pic != null;
+            exif = new ExifInterface(pic.getAbsolutePath());
 
-        int usFirst = pic.getName().indexOf('_', 5);
-        int usLast = pic.getName().indexOf('_', usFirst + 1);
+            if(!caption.getText().toString().matches(""))
+            {
+                exif.setAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION, caption.getText().toString());
+                exif.saveAttributes();
+                String theCaption = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
 
-        newName = pic.getName().substring(0, pic.getName().indexOf('_', 1))
-                + pic.getName().substring(pic.getName().indexOf('_',
-                1), pic.getName().indexOf('_', 5) + 1);
-        lastHalf = pic.getName().substring(pic.getName().lastIndexOf('_'));
+                if (theCaption != null && !theCaption.isEmpty()) {
+                    captionDisplay.setText(theCaption);
+                }
+            }
 
-        if (!caption.getText().toString().isEmpty()) {
-            newName = newName + caption.getText().toString() + lastHalf;
-        } else if (caption.getText().toString().isEmpty()){
-            newName = newName + "~" + lastHalf;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        String zePath = pic.getPath().substring(0, pic.getPath().lastIndexOf('/') + 1);
-        tmpFile = new File(zePath + newName);
-        pic.renameTo(tmpFile);
     }
 
     private String dec2DMS(double coord) {
@@ -371,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
      * @param timeStamp
      */
     private void setImageFileName(String timeStamp) {
-        this.imageFileName = "JPEG_" + timeStamp + "_~_";
+        this.imageFileName = "JPEG_" + timeStamp + "_";
     }
 
     /**

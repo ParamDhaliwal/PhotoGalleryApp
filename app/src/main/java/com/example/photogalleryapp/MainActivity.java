@@ -1,18 +1,14 @@
 package com.example.photogalleryapp;
 
 import android.Manifest;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -24,11 +20,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +42,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
-    static final int SEARCH_ACTIVITY_REQUEST_CODE = 0;
+    public static final int GPS_REQUEST = 1001;
+    public static final int LOCATION_REQUEST = 1000;
     static final int CAMERA_REQUEST_CODE = 1;
     static final String PHOTO_FILEPROVIDER = "com.example.photogalleryapp.fileprovider";
 
@@ -58,31 +60,55 @@ public class MainActivity extends AppCompatActivity {
     private TextView timeStamp;
     private File tmpNewFile;
     private ExifInterface exifInterface;
-    private Location location;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
 
+    private double wayLatitude = 0.0, wayLongitude = 0.0;
+
+    private FusedLocationProviderClient mFusedLocationClient;
+
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
+
+    private boolean isGPS = false;
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new MyLocationListener();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(20 * 1000);
 
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        new GpsUtils(this).turnGPSOn(new GpsUtils.onGpsListener() {
+            @Override
+            public void gpsStatus(boolean isGPSEnable) {
+                // turn on GPS
+                isGPS = isGPSEnable;
+            }
+        });
 
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                    101);
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    101);
-            Toast.makeText(MainActivity.this, "Permissions main", Toast.LENGTH_SHORT).show();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }
 
-        String provider = locationManager.getBestProvider(new Criteria(), true);
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (location != null) {
+                        wayLatitude = location.getLatitude();
+                        wayLongitude = location.getLongitude();
+                        if (mFusedLocationClient != null) {
+                            mFusedLocationClient.removeLocationUpdates(locationCallback);
+                        }
+                    }
+                }
+            }
+        };
 
-        this.location = locationManager.getLastKnownLocation(provider);
+        getLocation();
 
         ivMain = findViewById(R.id.ivMain);
         caption = (EditText) findViewById(R.id.captionBox);
@@ -111,12 +137,10 @@ public class MainActivity extends AppCompatActivity {
             public void onSwipeTop() {
                 Toast.makeText(MainActivity.this, "Gallery Open", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, GalleryActivity.class));
-                // startActivityForResult(new Intent(MainActivity.this, GalleryActivity.class), 1);
             }
 
             @Override
             public void onSwipeRight() {
-                //Toast.makeText(MainActivity.this, "SWIPE RIGHT", Toast.LENGTH_SHORT).show();
                 ++currentPhotoIndex;
                 if (currentPhotoIndex < 0)
                     currentPhotoIndex = 0;
@@ -128,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwipeLeft() {
-                //Toast.makeText(MainActivity.this, "SWIPE LEFT", Toast.LENGTH_SHORT).show();
                 --currentPhotoIndex;
                 if (currentPhotoIndex < 0)
                     currentPhotoIndex = 0;
@@ -208,16 +231,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (tmpNewFile.length() == 0) {
-            tmpNewFile.delete();
-            tmpNewFile = null;
-        }
-
         if (resultCode == RESULT_OK && tmpNewFile != null && tmpNewFile.length() != 0) {
+            getLocation();
+            if (tmpNewFile.length() == 0) {
+                tmpNewFile.delete();
+                tmpNewFile = null;
+            }
             currentPhoto = tmpNewFile;
             currentPhotoPath = currentPhoto.getPath();
             photoGallery.add(currentPhoto);
             displayPhoto(currentPhoto);
+            if (requestCode == GPS_REQUEST) {
+                isGPS = true; // flag maintain before get location
+            }
         }
     }
 
@@ -256,6 +282,10 @@ public class MainActivity extends AppCompatActivity {
     public void savingCaption(View v) {
         File pic = null;
 
+        while (!isGPS) {
+            Toast.makeText(this, "Please turn on GPS", Toast.LENGTH_SHORT).show();
+        }
+
         pic = photoGallery.get(currentPhotoIndex);
         try {
             exifInterface = new ExifInterface(pic.getAbsolutePath());
@@ -263,26 +293,25 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        if (this.location != null) {
-            Toast.makeText(MainActivity.this, "My Location " + this.location, Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, "My Location=> Lat: " + this.wayLatitude + " | Long: " + this.wayLongitude, Toast.LENGTH_SHORT).show();
 
-            if (this.location.getLatitude() > 0)
-                exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
-            else
-                exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
-            if (this.location.getLongitude() > 0)
-                exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
-            else
-                exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
+        if (this.wayLatitude > 0)
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "N");
+        else
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, "S");
+        if (this.wayLongitude > 0)
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "E");
+        else
+            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, "W");
 
-            exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(this.location.getLongitude()));
-            exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(this.location.getLatitude()));
-            try {
-                exifInterface.saveAttributes();
-            } catch ( IOException e) {
-                e.printStackTrace();
-            }
+        exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, dec2DMS(this.wayLongitude));
+        exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE, dec2DMS(this.wayLatitude));
+        try {
+            exifInterface.saveAttributes();
+        } catch ( IOException e) {
+            e.printStackTrace();
         }
+
 
         File tmpFile = null;
         String newName = "";
@@ -316,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
         sOut = sOut + Integer.toString((int)coord) + "/1000";   // 105/1,59/1,15555/1000
         return sOut;
     }
-    
+
     /**
      * Gets the name of the image file
      * @return imageFileName
@@ -374,30 +403,24 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    private class MyLocationListener implements LocationListener {
-        private double longitude;
-        private double latitude;
-        @Override
-        public void onLocationChanged(Location location) {
-            this.longitude = location.getLongitude();
-            this.latitude = location.getLatitude();
-        }
+    private void getLocation() {
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    LOCATION_REQUEST);
+        } else {
 
-        @Override
-        public void onProviderDisabled(String provider) {}
-
-        @Override
-        public void onProviderEnabled(String provider) {}
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-        public double getLongitude() {
-            return this.longitude;
-        }
-
-        public double getLatitude() {
-            return this.latitude;
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        wayLatitude = location.getLatitude();
+                        wayLongitude = location.getLongitude();
+                    } else {
+                        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+                    }
+                }
+            });
         }
     }
 }

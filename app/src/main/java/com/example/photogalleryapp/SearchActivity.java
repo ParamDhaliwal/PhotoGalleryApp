@@ -50,20 +50,21 @@ public class SearchActivity extends AppCompatActivity {
 
     public ArrayList<File> filterPictures()
     {
-        ArrayList<File> searchResult = null;
         EditText fromDate = findViewById(R.id.search_fromDate);
         EditText toDate   = findViewById(R.id.search_toDate);
         EditText latitude = findViewById(R.id.search_latitude);
         EditText longitude = findViewById(R.id.search_longitude);
+        EditText caption = findViewById(R.id.search_caption);
         String lat = latitude.getText().toString();
         String lng = longitude.getText().toString();
         String fdate = fromDate.getText().toString();
         String tdate = toDate.getText().toString();
+        String cap = caption.getText().toString();
 
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File[] allImages = null;
 
-        if (dir.exists()) {
+        if (dir != null && dir.exists()) {
             allImages = dir.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return (name.endsWith(".jpg"));
@@ -80,6 +81,10 @@ public class SearchActivity extends AppCompatActivity {
         else if(!lat.matches("") && !lng.matches(""))
         {
             return filterPicturesByLocation(lat, lng, allImages);
+        }
+        else if(!cap.matches(""))
+        {
+            return filterPicturesByCaption(cap, allImages);
         }
         else
         {
@@ -139,7 +144,30 @@ public class SearchActivity extends AppCompatActivity {
         return searchResult;
     }
 
+    public ArrayList<File> filterPicturesByCaption(String caption, File[] images)
+    {
+        ArrayList<File> searchResult = new ArrayList<>();
+        ExifInterface exif;
+        String image_caption;
+
+        for(File image: images) {
+            try {
+                exif = new ExifInterface(image.getAbsolutePath());
+                image_caption = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
+                if (image_caption != null && image_caption.equals(caption)) {
+                    searchResult.add(image);
+                }
+
+            } catch (IOException ex) {
+                Log.v("Exception", ex.getLocalizedMessage());
+            }
+        }
+
+        return searchResult;
+    }
+
     private void displayPhoto(ArrayList<File> searchResults) {
+        searchResultDisplay.removeAllViews();
         for (File result: searchResults) {
             LinearLayout ll = new LinearLayout(SearchActivity.this);
             ImageView iv = new ImageView(SearchActivity.this);

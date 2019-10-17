@@ -1,6 +1,5 @@
 package com.example.photogalleryapp;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -61,30 +60,11 @@ public class MainActivity extends AppCompatActivity {
     private File tmpNewFile;
     private ExifInterface exifInterface;
     private Location location;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new MyLocationListener();
-
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                    101);
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    101);
-            Toast.makeText(MainActivity.this, "Permissions main", Toast.LENGTH_SHORT).show();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }
-
-        String provider = locationManager.getBestProvider(new Criteria(), true);
-
-        this.location = locationManager.getLastKnownLocation(provider);
 
         ivMain = findViewById(R.id.ivMain);
         caption = (EditText) findViewById(R.id.captionBox);
@@ -96,13 +76,13 @@ public class MainActivity extends AppCompatActivity {
             photoGallery = populateGallery();
 
             if (!photoGallery.isEmpty()) {
-                displayPhoto(this.photoGallery.get(this.photoGallery.size() - 1));
+                displayPhoto(this.photoGallery.get(this.photoGallery.size()-1));
             }
         } catch (ArrayIndexOutOfBoundsException ex) {
-
+            
         }
 
-        btnFilter = (Button) findViewById(R.id.btnFilter);
+        btnFilter = (Button)findViewById(R.id.btnFilter);
         btnFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,9 +95,8 @@ public class MainActivity extends AppCompatActivity {
             public void onSwipeTop() {
                 Toast.makeText(MainActivity.this, "Gallery Open", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, GalleryActivity.class));
-                // startActivityForResult(new Intent(MainActivity.this, GalleryActivity.class), 1);
+               // startActivityForResult(new Intent(MainActivity.this, GalleryActivity.class), 1);
             }
-
             @Override
             public void onSwipeRight() {
                 //Toast.makeText(MainActivity.this, "SWIPE RIGHT", Toast.LENGTH_SHORT).show();
@@ -129,9 +108,8 @@ public class MainActivity extends AppCompatActivity {
                 currentPhoto = photoGallery.get(currentPhotoIndex);
                 displayPhoto(currentPhoto);
             }
-
             @Override
-            public void onSwipeLeft() {
+            public  void onSwipeLeft() {
                 //Toast.makeText(MainActivity.this, "SWIPE LEFT", Toast.LENGTH_SHORT).show();
                 --currentPhotoIndex;
                 if (currentPhotoIndex < 0)
@@ -158,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         assert allImages != null;
-        for (File image : allImages) {
+        for(File image: allImages) {
             gallery.add(image);
         }
         return gallery;
@@ -208,8 +186,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             date = inf.parse(theTimeStamp);
             theTimeStamp = outf.format(date);
-        } catch (ParseException e) {
-        }
+        } catch (ParseException e) {}
 
 
 
@@ -321,6 +298,22 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new MyLocationListener();
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                    101);
+            Toast.makeText(MainActivity.this, "Permissions main", Toast.LENGTH_SHORT).show();
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+        String provider = locationManager.getBestProvider(new Criteria(), true);
+
+
+        this.location = locationManager.getLastKnownLocation(provider);
+
         if (this.location != null) {
             Toast.makeText(MainActivity.this, "My Location " + this.location, Toast.LENGTH_SHORT).show();
 
@@ -372,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
         sOut = sOut + Integer.toString((int)coord) + "/1000";   // 105/1,59/1,15555/1000
         return sOut;
     }
-    
+
     /**
      * Gets the name of the image file
      * @return imageFileName

@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnFilter;
     private ImageView ivMain;
-    private EditText caption;
+    private TextView caption;
     private TextView timeStamp;
     private File tmpNewFile;
 
@@ -52,8 +53,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ivMain = findViewById(R.id.ivMain);
-        caption = (EditText) findViewById(R.id.captionBox);
+        caption = (TextView) findViewById(R.id.captionDisplay);
         timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
+
 
         try {
             photoGallery = populateGallery();
@@ -129,9 +131,18 @@ public class MainActivity extends AppCompatActivity {
      * Displays a image file
      * @param image
      */
-    private void displayPhoto(File image) {
-        ImageView iv = findViewById(R.id.ivMain);
-        iv.setImageBitmap(decodeFile(image));
+    private void displayPhoto(final File image) {
+        final ImageView iv = findViewById(R.id.ivMain);
+        ViewTreeObserver vto = iv.getViewTreeObserver();
+        vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            public boolean onPreDraw() {
+                iv.getViewTreeObserver().removeOnPreDrawListener(this);
+                final int ivHeight = iv.getMeasuredHeight();
+                final int ivWidth = iv.getMeasuredWidth();
+                iv.setImageBitmap(decodeSampledBitmapFromFile(image, ivWidth, ivHeight));
+                return true;
+            }
+        });
         iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         currentPhotoPath = image.getPath();
         currentPhoto = image;
@@ -162,6 +173,46 @@ public class MainActivity extends AppCompatActivity {
         caption.setText(theCaption);
         timeStamp.setText(theTimeStamp);
     }
+
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeSampledBitmapFromFile(File image,
+                                                         int fileImgWidth, int fileImgHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(image.getAbsolutePath(), options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, fileImgWidth, fileImgHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(image.getAbsolutePath(), options);
+    }
+
 
     @Override
     public void onResume() {
@@ -289,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
             BitmapFactory.decodeStream(new FileInputStream(f), null, o);
 
             // The new size we want to scale to
-            final int REQUIRED_SIZE=70;
+            final int REQUIRED_SIZE=450;
 
             // Find the correct scale value. It should be the power of 2.
             int scale = 1;

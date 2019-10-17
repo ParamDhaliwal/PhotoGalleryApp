@@ -167,6 +167,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void displayPhoto(ArrayList<File> searchResults) {
+        searchResultDisplay.removeAllViews();
         for (File result: searchResults) {
             LinearLayout ll = new LinearLayout(SearchActivity.this);
             ImageView iv = new ImageView(SearchActivity.this);

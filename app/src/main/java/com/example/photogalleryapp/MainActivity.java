@@ -181,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         timeStamp.setText(theTimeStamp);
+        caption.setText("");
     }
 
     public static int calculateInSampleSize(

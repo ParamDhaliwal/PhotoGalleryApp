@@ -23,9 +23,6 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/title_search"
-                android:layout_alignLeft="@+id/title_search"
-                android:layout_alignBottom="@+id/search_fromDate"
                 android:text="From:"
                 android:textSize="18sp"
                 android:visibility="visible" />
@@ -34,9 +31,6 @@
                 android:id="@+id/search_fromDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/title_search"
-                android:layout_alignEnd="@+id/title_search"
-                android:layout_alignRight="@+id/title_search"
                 android:hint="yy/MM/dd"
                 android:inputType="date"
                 android:textSize="14sp" />
@@ -50,9 +44,6 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/search_fromDateLabel"
-                android:layout_alignLeft="@+id/search_fromDateLabel"
-                android:layout_alignTop="@+id/search_toDate"
                 android:text="To:"
                 android:textSize="18sp" />
 
@@ -60,9 +51,6 @@
                 android:id="@+id/search_toDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/search_fromDate"
-                android:layout_alignEnd="@+id/search_fromDate"
-                android:layout_alignRight="@+id/search_fromDate"
                 android:hint="yy/MM/dd"
                 android:inputType="date"
                 android:textSize="14sp" />
@@ -76,20 +64,14 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/title_search"
-                android:layout_alignLeft="@+id/title_search"
-                android:layout_alignBottom="@+id/search_toDate"
                 android:text="Latitude:"
                 android:textSize="18sp"
                 android:visibility="visible" />
 
             <EditText
                 android:id="@+id/search_latitude"
-                android:layout_width="300px"
+                android:layout_width="90dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/title_search"
-                android:layout_alignEnd="@+id/title_search"
-                android:layout_alignRight="@+id/title_search"
                 android:hint=""
                 android:inputType="numberSigned|numberDecimal"
                 android:textSize="14sp" />
@@ -103,20 +85,14 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/title_search"
-                android:layout_alignLeft="@+id/title_search"
-                android:layout_alignBottom="@+id/search_toDate"
                 android:text="Longitude:"
                 android:textSize="18sp"
                 android:visibility="visible" />
 
             <EditText
                 android:id="@+id/search_longitude"
-                android:layout_width="300px"
+                android:layout_width="90dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/title_search"
-                android:layout_alignEnd="@+id/title_search"
-                android:layout_alignRight="@+id/title_search"
                 android:hint=""
                 android:inputType="numberSigned|numberDecimal"
                 android:textSize="14sp" />
@@ -130,20 +106,14 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/title_search"
-                android:layout_alignLeft="@+id/title_search"
-                android:layout_alignBottom="@+id/search_toDate"
                 android:text="Caption:"
                 android:textSize="18sp"
                 android:visibility="visible" />
 
             <EditText
                 android:id="@+id/search_caption"
-                android:layout_width="300px"
+                android:layout_width="150dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/title_search"
-                android:layout_alignEnd="@+id/title_search"
-                android:layout_alignRight="@+id/title_search"
                 android:hint=""
                 android:inputType="textShortMessage"
                 android:textSize="14sp" />
@@ -158,8 +128,6 @@
             android:id="@+id/search_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/search_search"
-            android:layout_below="@+id/search_main"
             android:orientation="vertical"
             android:verticalScrollbarPosition="right"
             android:text="Search Results" />

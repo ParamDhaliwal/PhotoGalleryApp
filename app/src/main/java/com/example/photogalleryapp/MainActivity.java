@@ -340,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
             BitmapFactory.decodeStream(new FileInputStream(f), null, o);
 
             // The new size we want to scale to
-            final int REQUIRED_SIZE=450;
+            final int REQUIRED_SIZE=70;
 
             // Find the correct scale value. It should be the power of 2.
             int scale = 1;

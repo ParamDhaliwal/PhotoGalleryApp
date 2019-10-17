@@ -8,6 +8,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -61,7 +62,7 @@ public class GalleryActivity extends AppCompatActivity {
 
                     TextView dialogText = dialog.findViewById(R.id.dialog_text);
 
-                    Button btnShare = (Button) dialog.findViewById(R.id.btnShareImage);
+                    ImageButton btnShare = (ImageButton) dialog.findViewById(R.id.btnShareImage);
 
                     btnShare.setOnClickListener(new View.OnClickListener() {
                         @Override

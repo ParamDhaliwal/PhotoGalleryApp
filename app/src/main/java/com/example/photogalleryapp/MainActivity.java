@@ -153,10 +153,11 @@ public class MainActivity extends AppCompatActivity {
 
         int usFirst = image.getName().indexOf('_', 5);
         int usLast = image.getName().indexOf('_', usFirst + 1);
-
-        if (image.getName().indexOf('~') < 0) {
-            theCaption = image.getName().substring(usFirst + 1, usLast);
-        }
+        try {
+            if (image.getName().indexOf('~') < 0) {
+                theCaption = image.getName().substring(usFirst + 1, usLast);
+            }
+        } catch (StringIndexOutOfBoundsException e) {}
 
         caption.setText(theCaption);
         timeStamp.setText(theTimeStamp);

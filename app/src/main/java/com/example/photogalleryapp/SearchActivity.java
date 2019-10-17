@@ -1,6 +1,7 @@
 package com.example.photogalleryapp;
 
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -15,9 +16,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import static com.example.photogalleryapp.MainActivity.decodeFile;
@@ -25,20 +28,14 @@ import static com.example.photogalleryapp.MainActivity.decodeFile;
 public class SearchActivity extends AppCompatActivity {
 
     private Button btnSearch;
-    private EditText fromDate;
-    private EditText toDate;
     private Date fDate;
     private Date tDate;
     private LinearLayout searchResultDisplay;
-
-    private static ArrayList<File> searchResult = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        fromDate = findViewById(R.id.search_fromDate);
-        toDate   = findViewById(R.id.search_toDate);
 
         searchResultDisplay = findViewById(R.id.search_result);
 
@@ -46,16 +43,54 @@ public class SearchActivity extends AppCompatActivity {
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                displayPhoto(getPictures(fromDate.getText().toString(), toDate.getText().toString()));
+                displayPhoto(filterPictures());
             }
         });
     }
 
-    public ArrayList<File> getPictures(String fromDate, String toDate) {
+    public ArrayList<File> filterPictures()
+    {
+        ArrayList<File> searchResult = null;
+        EditText fromDate = findViewById(R.id.search_fromDate);
+        EditText toDate   = findViewById(R.id.search_toDate);
+        EditText latitude = findViewById(R.id.search_latitude);
+        EditText longitude = findViewById(R.id.search_longitude);
+        String lat = latitude.getText().toString();
+        String lng = longitude.getText().toString();
+        String fdate = fromDate.getText().toString();
+        String tdate = toDate.getText().toString();
+
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File[] allImages = null;
 
-        searchResult = new ArrayList<>(); // stores all images results by date search and returns
+        if (dir.exists()) {
+            allImages = dir.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return (name.endsWith(".jpg"));
+                }
+            });
+        }
+
+        assert allImages != null;
+
+        if(!fdate.matches("") && !tdate.matches(""))
+        {
+            return filterPicturesByDate(fdate, tdate, allImages);
+        }
+        else if(!lat.matches("") && !lng.matches(""))
+        {
+            return filterPicturesByLocation(lat, lng, allImages);
+        }
+        else
+        {
+            return new ArrayList<>(Arrays.asList(allImages));
+        }
+
+    }
+
+    public ArrayList<File> filterPicturesByDate(String fromDate, String toDate, File[] images) {
+        ArrayList<File> searchResult = new ArrayList<>();
+        Date imageDate;
         try {
             fDate = new SimpleDateFormat("yy/MM/dd").parse(fromDate);
             tDate = new SimpleDateFormat("yy/MM/dd").parse(toDate);
@@ -63,23 +98,14 @@ public class SearchActivity extends AppCompatActivity {
             Log.v("Exception", ex.getLocalizedMessage());
         }
 
-        if (dir.exists()) {
-            allImages = dir.listFiles(new FilenameFilter() {
-               public boolean accept(File dir, String name) {
-                    return (name.endsWith(".jpg"));
-               }
-            });
-        }
-        assert allImages != null;
-        Date imageDate;
-        for(File image: allImages) {
+        for(File image: images) {
             try {
                 String[] parts = image.getName().split("_");
                 String imageFileName = parts[1];
                 String caption = parts[2];
                 imageDate = new SimpleDateFormat("yyMMdd").parse(imageFileName);
                 Log.d("imageDate = ", imageDate.toString());
-                if (imageDate.compareTo(fDate) > 0 && imageDate.compareTo(tDate) < 0) {
+                if (imageDate.compareTo(fDate) >= 0 && imageDate.compareTo(tDate) <= 0) {
                     Log.d("Selected image: ", image.getName());
                     searchResult.add(image);
                 }
@@ -87,6 +113,29 @@ public class SearchActivity extends AppCompatActivity {
                 Log.v("Exception", ex.getLocalizedMessage());
             }
         }
+        return searchResult;
+    }
+
+    public ArrayList<File> filterPicturesByLocation(String latitude, String longitude, File[] images)
+    {
+        ArrayList<File> searchResult = new ArrayList<>();
+        ExifInterface exif;
+        String image_lat, image_lng;
+
+        for(File image: images) {
+            try {
+                exif = new ExifInterface(image.getAbsolutePath());
+                image_lat = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE);
+                image_lng = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE);
+                if (latitude.equals(image_lat) && longitude.equals(image_lng)) {
+                    searchResult.add(image);
+                }
+
+            } catch (IOException ex) {
+                Log.v("Exception", ex.getLocalizedMessage());
+            }
+        }
+
         return searchResult;
     }
 

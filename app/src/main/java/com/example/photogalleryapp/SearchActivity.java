@@ -50,7 +50,6 @@ public class SearchActivity extends AppCompatActivity {
 
     public ArrayList<File> filterPictures()
     {
-        ArrayList<File> searchResult = null;
         EditText fromDate = findViewById(R.id.search_fromDate);
         EditText toDate   = findViewById(R.id.search_toDate);
         EditText latitude = findViewById(R.id.search_latitude);
@@ -63,7 +62,7 @@ public class SearchActivity extends AppCompatActivity {
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File[] allImages = null;
 
-        if (dir.exists()) {
+        if (dir != null && dir.exists()) {
             allImages = dir.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return (name.endsWith(".jpg"));

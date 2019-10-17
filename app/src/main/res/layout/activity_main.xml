@@ -7,27 +7,33 @@
 
     <ImageView
         android:id="@+id/ivMain"
-        android:layout_width="wrap_content"
-        android:layout_height="300dp"
-        android:src="@mipmap/ic_launcher"
-        android:adjustViewBounds="true"
-        android:maxWidth="42dp"
-        android:maxHeight="42dp"
-        android:scaleType="fitXY"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
+        android:layout_width="match_parent"
+        android:layout_height="518dp"
+        android:layout_above="@+id/captionBox"
         android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginBottom="26dp"
+        android:adjustViewBounds="true"
+        android:maxWidth="300dp"
+        android:maxHeight="300dp"
+        android:scaleType="fitXY"
+        android:src="@mipmap/ic_launcher" />
 
     <Button
         android:id="@+id/btnCamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="210dp"
-        android:layout_marginLeft="2dp"
-        android:layout_marginStart="2dp"
+        android:layout_marginLeft="27dp"
+        android:layout_marginBottom="10dp"
         android:onClick="takePicture"
         android:text="@string/snap_btn" />
 
@@ -39,9 +45,9 @@
         android:layout_alignBottom="@+id/btnCamera"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginBottom="77dp"
-        android:layout_marginEnd="42dp"
-        android:layout_marginRight="42dp"
+        android:layout_marginEnd="27dp"
+        android:layout_marginRight="27dp"
+        android:layout_marginBottom="-20dp"
         android:text="@string/filter_btn" />
 
     <TextView
@@ -52,17 +58,26 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="21dp" />
 
+    <TextView
+        android:id="@+id/captionDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="175dp" />
+
     <EditText
         android:id="@+id/captionBox"
         style="@style/Widget.AppCompat.EditText"
         android:layout_width="251dp"
         android:layout_height="87dp"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginBottom="100dp"
-        android:layout_marginEnd="77dp"
-        android:layout_marginRight="77dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginEnd="81dp"
+        android:layout_marginRight="81dp"
+        android:layout_marginBottom="98dp"
         android:ems="10"
         android:hint="@string/enterCaption"
         android:inputType="textPersonName"

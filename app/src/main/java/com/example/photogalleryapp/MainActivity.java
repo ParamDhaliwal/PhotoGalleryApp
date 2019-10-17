@@ -18,6 +18,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnFilter;
     private ImageView ivMain;
     private EditText caption;
+    private TextView captionDisplay;
     private TextView timeStamp;
     private File tmpNewFile;
     private ExifInterface exifInterface;
@@ -87,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
         ivMain = findViewById(R.id.ivMain);
         caption = (EditText) findViewById(R.id.captionBox);
         timeStamp = (TextView) findViewById(R.id.timeStampDisplay);
+        captionDisplay = (TextView) findViewById(R.id.captionDisplay);
+
 
         try {
             photoGallery = populateGallery();
@@ -164,14 +168,34 @@ public class MainActivity extends AppCompatActivity {
      * Displays a image file
      * @param image
      */
-    private void displayPhoto(File image) {
-        ImageView iv = findViewById(R.id.ivMain);
-        iv.setImageBitmap(decodeFile(image));
+    private void displayPhoto(final File image) {
+        final ImageView iv = findViewById(R.id.ivMain);
+        ViewTreeObserver vto = iv.getViewTreeObserver();
+        vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            public boolean onPreDraw() {
+                iv.getViewTreeObserver().removeOnPreDrawListener(this);
+                final int ivHeight = iv.getMeasuredHeight();
+                final int ivWidth = iv.getMeasuredWidth();
+                iv.setImageBitmap(decodeSampledBitmapFromFile(image, ivWidth, ivHeight));
+                return true;
+            }
+        });
         iv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         currentPhotoPath = image.getPath();
         currentPhoto = image;
+        try {
+            ExifInterface exif = new ExifInterface(image.getAbsolutePath());
+            String theCaption = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
+            if (theCaption != null && !theCaption.isEmpty()) {
+                captionDisplay.setText(theCaption);
+            }
+            else {
+                captionDisplay.setText("");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        String theCaption = "";
         String theTimeStamp = "";
         int tmp = image.getName().indexOf('_', 0);
 
@@ -187,18 +211,50 @@ public class MainActivity extends AppCompatActivity {
         } catch (ParseException e) {
         }
 
-        int usFirst = image.getName().indexOf('_', 5);
-        int usLast = image.getName().indexOf('_', usFirst + 1);
-        try {
-            if (image.getName().indexOf('~') < 0) {
-                theCaption = image.getName().substring(usFirst + 1, usLast);
-            }
-        } catch (StringIndexOutOfBoundsException e) {
-        }
 
-        caption.setText(theCaption);
+
         timeStamp.setText(theTimeStamp);
     }
+
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeSampledBitmapFromFile(File image,
+                                                         int fileImgWidth, int fileImgHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(image.getAbsolutePath(), options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, fileImgWidth, fileImgHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(image.getAbsolutePath(), options);
+    }
+
 
     @Override
     public void onResume() {
@@ -253,8 +309,10 @@ public class MainActivity extends AppCompatActivity {
         return this.imageFile;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void savingCaption(View v) {
         File pic = null;
+        ExifInterface exif;
 
         pic = photoGallery.get(currentPhotoIndex);
         try {
@@ -284,27 +342,25 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        File tmpFile = null;
-        String newName = "";
-        String lastHalf = "";
+        try {
+            assert pic != null;
+            exif = new ExifInterface(pic.getAbsolutePath());
 
-        int usFirst = pic.getName().indexOf('_', 5);
-        int usLast = pic.getName().indexOf('_', usFirst + 1);
+            if(!caption.getText().toString().matches(""))
+            {
+                exif.setAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION, caption.getText().toString());
+                exif.saveAttributes();
+                String theCaption = exif.getAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION);
 
-        newName = pic.getName().substring(0, pic.getName().indexOf('_', 1))
-                + pic.getName().substring(pic.getName().indexOf('_',
-                1), pic.getName().indexOf('_', 5) + 1);
-        lastHalf = pic.getName().substring(pic.getName().lastIndexOf('_'));
+                if (theCaption != null && !theCaption.isEmpty()) {
+                    captionDisplay.setText(theCaption);
+                }
+            }
 
-        if (!caption.getText().toString().isEmpty()) {
-            newName = newName + caption.getText().toString() + lastHalf;
-        } else if (caption.getText().toString().isEmpty()){
-            newName = newName + "~" + lastHalf;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        String zePath = pic.getPath().substring(0, pic.getPath().lastIndexOf('/') + 1);
-        tmpFile = new File(zePath + newName);
-        pic.renameTo(tmpFile);
     }
 
     private String dec2DMS(double coord) {
@@ -330,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
      * @param timeStamp
      */
     private void setImageFileName(String timeStamp) {
-        this.imageFileName = "JPEG_" + timeStamp + "_~_";
+        this.imageFileName = "JPEG_" + timeStamp + "_";
     }
 
     /**
